@@ -1,66 +1,66 @@
 const FormModel = require('../models/adForm');
 const cloudinary = require('cloudinary').v2;
-const multer = require('multer');
+const mongoose = require('mongoose')
+const Ad = require('../models/Ad');
 
 const getAllForms = async (req, res) => {
     try {
-        const forms = await FormModel.find();
+        const forms = await Ad.find();
         res.status(200).json(forms);
     } catch (error) {
         res.status(500).json({ message: "Failed to retrieve forms data", error: error.message });
     }
 };
 
+
 cloudinary.config({
-    cloud_name: 'fzr',
-    api_key: '846165115762924',
-    api_secret: '92S1T0zHqI4QMqg1U4Ly25MCcRE'
-  });
+    cloud_name: 'dm55kqxna',
+    api_key: '473296691162498',
+    api_secret: 'HJ5jdvY3Zn1hszS0Ev15Axs0t0c'
+});
 
 
-// Controller for creating a new form data
-const createForm = async (req, res) => {
+const createAd = async (req, res) => {
     try {
-        const { title, category, subcategory, price, desc, images, address, name, phone, featured, approve } = req.body;
-
-        // Validate that 'images' field is present and is an array
-        if (!Array.isArray(images)) {
-            return res.status(400).json({ message: "Images are required and must be an array" });
-        }
-
-        // Ensure images field is an array of strings
-        const imageNames = images.map(img => img.split('/').pop()); // Extracting image names
-
-        const formData = {
-            title,
-            category,
-            subcategory,
-            price,
-            desc,
-            image: imageNames,
-            address,
-            name,
-            phone,
-            featured,
-            approve
-        };
-
-        // Save form data to your database
-        const newForm = new FormModel(formData);
-        await newForm.save();
-
-        res.status(201).json({ message: "Form data created successfully", data: newForm });
+      const { title, category, subcategory, price, desc, address, phone, approve, featured, userId } = req.body;
+      const images = req.files.images;
+  
+      // Upload image to Cloudinary
+      const uploadedImages = await Promise.all(images.map(async (image) => {
+        const result = await cloudinary.uploader.upload(image.path, { folder: 'adImages' });
+        return { url: result.secure_url, name: image.originalname };
+      }));
+  
+      const ad = new Ad({
+        title,
+        category,
+        subcategory,
+        price,
+        desc,
+        images: uploadedImages,
+        address,
+        phone,
+        approve,
+        featured,
+        userId
+      });
+  
+      await ad.save();
+      res.status(201).json({ message: 'Ad created successfully', ad });
     } catch (error) {
-        console.error("Error creating form data:", error);
-        res.status(400).json({ message: "Failed to create form data", error: error.message });
+      console.error(error);
+      res.status(500).json({ message: 'Server Error' });
     }
-};
+  };
+
+
+
 
 // Controller for retrieving form data by ID
 const getFormById = async (req, res) => {
     try {
         const formId = req.params.id;
-        const formData = await FormModel.findById(formId);
+        const formData = await Ad.findById(formId);
         if (!formData) {
             return res.status(404).json({ message: "Form data not found" });
         }
@@ -99,4 +99,4 @@ const deleteFormById = async (req, res) => {
     }
 };
 
-module.exports = { createForm, getFormById, updateFormById, deleteFormById, getAllForms };
+module.exports = { createAd, getFormById, updateFormById, deleteFormById, getAllForms };

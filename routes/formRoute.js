@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const adController = require('../controllers/adController');
+const multer = require('multer');
+
+const upload = multer({ dest: 'uploads/' });
 
 
-router.post('/form', adController.createForm);
+router.post('/form', upload.fields([{ name: 'images', maxCount: 5 }]), adController.createAd);
 
 router.get('/form/:id', adController.getFormById);
 

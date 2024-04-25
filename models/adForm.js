@@ -1,11 +1,19 @@
 const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2;
+
+
+cloudinary.config({
+    cloud_name: 'dm55kqxna',
+    api_key: '473296691162498',
+    api_secret: 'HJ5jdvY3Zn1hszS0Ev15Axs0t0c'
+});
 
 const imageSchema = new mongoose.Schema({
-    imageName: {
-        type: String,
-        required: true
+    imageUrl: {
+      type: String,
+      required: true
     }
-});
+  });
 
 const formSchema = new mongoose.Schema({
     title:{
@@ -29,7 +37,7 @@ const formSchema = new mongoose.Schema({
         type:String,
         require:true
     },
-    image:[imageSchema],
+    images:[imageSchema],
     address:{
         type:String,
         require:true,
